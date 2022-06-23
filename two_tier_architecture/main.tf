@@ -110,7 +110,7 @@ resource "aws_security_group" "web_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -119,6 +119,15 @@ resource "aws_security_group" "web_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+# Application load balancer - Internet-facing
+resource "aws_alb" "alb"    {
+    name = "alb"
+    load_balancer_type = "application"
+    internal = false
+    subnets         = [aws_subnet.public_subnet1.id, aws_subnet.public_subnet2.id]
+    security_groups = [aws_security_group.web_sg.id]
 }
 
 # EC2 instance for public subnet 1
@@ -178,7 +187,7 @@ resource "aws_security_group" "db_sg" {
     to_port     = 22
     protocol    = "tcp"
     security_groups = [aws_security_group.web_sg.id]
-    cidr_blocks = ["10.0.0.0/16"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -191,7 +200,7 @@ resource "aws_security_group" "db_sg" {
 
 # Database instance in private subnet 1
 resource "aws_db_instance" "db1" {
-    allocated_storage    = 10
+    allocated_storage    = 5
     engine               = "mysql"
     engine_version       = "5.7"
     instance_class       = "db.t3.micro"
@@ -200,13 +209,4 @@ resource "aws_db_instance" "db1" {
     username             = "admin"
     password             = "password"
     skip_final_snapshot  = true
-}
-
-# Application load balancer - Internet-facing
-resource "aws_alb" "alb"    {
-    name = "alb"
-    load_balancer_type = "application"
-    internal = false
-    subnets         = [aws_subnet.public_subnet1.id, aws_subnet.public_subnet2.id]
-    security_groups = [aws_security_group.web_sg.id]
 }
