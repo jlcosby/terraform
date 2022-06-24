@@ -6,27 +6,40 @@ terraform {
   }
 }
 
+
 provider "docker" {}
 
-# download nodered image
-resource "docker_image" "nodered_image" {
-  name = "nodered/node-red:latest"
+resource "null_resource" "dockervol" {
+  provisioner "local-exec" {
+    command = "mkdir noderedvol/ || true && sudo chown -R 1000:1000 noderedvol/"
+  }
 }
 
-# add random string - 4 characters, no special characters, no uppercase
+resource "docker_image" "nodered_image" {
+  name = var.image[terraform.workspace]
+}
+
 resource "random_string" "random" {
-  count   = var.container_count
+  count   = local.container_count
   length  = 4
   special = false
   upper   = false
-  }
+}
+
 
 resource "docker_container" "nodered_container" {
-  count = 1
-  name  = join("-",["nodered", random_string.random[count.index].result])
+  count = local.container_count
+  name  = join("-", ["nodered", terraform.workspace, random_string.random[count.index].result])
   image = docker_image.nodered_image.latest
   ports {
     internal = var.int_port
-    external = var.ext_port
+    external = var.ext_port[terraform.workspace][count.index]
+  }
+  volumes {
+    container_path = "/data"
+    host_path      = "${path.cwd}/noderedvol"
   }
 }
+
+
+s
