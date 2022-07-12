@@ -3,7 +3,7 @@
 # Database subnet group
 resource "aws_db_subnet_group" "db_subnet"  {
     name       = "db_subnet"
-    subnet_ids = [aws_subnet.private_subnet1.id, aws_subnet.private_subnet2.id]
+    subnet_ids = [aws_subnet.private_subnet.id, aws_subnet.private_subnet.id]
 }
 
 # Security group for database tier
